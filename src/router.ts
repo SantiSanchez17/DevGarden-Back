@@ -1,6 +1,7 @@
 import { Router } from 'express';
-import { createUser } from './handlers/userH';
+import { createUser, login } from './handlers/userH';
 import { body } from 'express-validator'
+import { handleInputErrors } from './middleware/validation';
 const router = Router()
 
 router.post('/auth/registro',
@@ -10,18 +11,19 @@ router.post('/auth/registro',
     body('email')
         .isEmail()
         .withMessage('Formato de correo invalido'),
-    createUser)
+    handleInputErrors,
+    createUser
+)
 
-router.get('/', (req, res) => {
-    res.send('Inicio')
-})
-
-router.get('/nuestro', (req, res) => {
-    res.send('Nuestros jardineros')
-})
-
-router.get('/bonos', (req, res) => {
-    res.send('Abonos y beneficios')
-})
+router.post('/auth/login',
+    body(['email', 'password'])
+        .notEmpty()
+        .withMessage('Hay campos vacios'),
+    body('email')
+        .isEmail()
+        .withMessage('Formato de correo invalido'),
+    handleInputErrors,
+    login,
+)
 
 export default router
