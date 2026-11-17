@@ -8,11 +8,17 @@ export const createUser = async (req: Request, res: Response) => {
     try {
         const { email, password } = req.body
 
-        if (await UserModel.findOne({ email })) return res.status(409).send('Ya hay un usuario con este correo');
+        if (await UserModel.findOne({ email })) {
+            const error = new Error ('Ya hay un usuario con este correo');
+            return res.status(409).json({ error: error.message });
+        }
         const user = new UserModel(req.body)
 
         const handle = slug(req.body.handle);
-        if (await UserModel.findOne({ handle })) return res.status(409).send('Ya existe este handle');
+        if (await UserModel.findOne({ handle })) {
+            const error = new Error('Ya existe este handle');
+            return res.status(409).json({ error: error.message });
+        }
 
         user.password = await haspassword(password);
         user.handle = handle;
@@ -33,9 +39,15 @@ export const login = async (req: Request, res: Response) => {
     try {
         const { email, password } = req.body
         const user = await UserModel.findOne({ email })
-        if (!user) return res.status(404).send('Este usuario no existe');
+        if (!user) {
+            const error = new Error('Este usuario no existe');
+            return res.status(404).json({ error: error.message });
+        }
 
-        if (!await checkPassword(password, user.password)) return res.status(409).send('contraseña equivocada, intente nuevamente');
+        if (!await checkPassword(password, user.password)) {
+            const error = new Error('contraseña equivocada, intente nuevamente');
+            return res.status(409).json({ error: error.message });
+        }
 
         res.status(200).send('Sesion Iniciada')
     } catch (error) {
