@@ -2,14 +2,15 @@ import { Request, Response } from 'express'
 import slug from 'slug'
 import UserModel from "../models/User"
 import { checkPassword, haspassword } from '../utils/auth'
-import { validationResult } from 'express-validator'
+import Jwt from 'jsonwebtoken'
+import { generateJWT } from '../utils/jwt'
 
 export const createUser = async (req: Request, res: Response) => {
     try {
         const { email, password } = req.body
 
         if (await UserModel.findOne({ email })) {
-            const error = new Error ('Ya hay un usuario con este correo');
+            const error = new Error('Ya hay un usuario con este correo');
             return res.status(409).json({ error: error.message });
         }
         const user = new UserModel(req.body)
@@ -35,7 +36,6 @@ export const createUser = async (req: Request, res: Response) => {
 }
 
 export const login = async (req: Request, res: Response) => {
-    console.log('login');
     try {
         const { email, password } = req.body
         const user = await UserModel.findOne({ email })
@@ -48,10 +48,16 @@ export const login = async (req: Request, res: Response) => {
             const error = new Error('contraseña equivocada, intente nuevamente');
             return res.status(409).json({ error: error.message });
         }
+        const token = generateJWT({ id: user._id, name: user.name });
 
-        res.status(200).send('Sesion Iniciada')
+        res.status(200).send(token)
+
     } catch (error) {
         console.log('Error', error);
         res.status(400).send('No se pudo registrar el usuario');
     }
+}
+
+export const getUser = async (req: Request, res: Response) => {
+    res.json(req.user)
 }
